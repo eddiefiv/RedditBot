@@ -7,6 +7,7 @@ import random
 import vlc
 import shutil
 
+from time import sleep
 from playsound import playsound
 from mutagen.mp3 import MP3
 from utils.tts import TikTokTTS, PollyTTS
@@ -59,16 +60,24 @@ def delete_files():
     shutil.rmtree("cut_clips")
     shutil.rmtree("screenshots")
 
-def start_tts(submission, voice) -> int:
+    for file in os.listdir("audio"):
+        if file.endswith(".mp3"):
+            os.remove(file)
+
+def start_tts(submission, voice, is_title: bool) -> int:
     tiktts = TikTokTTS()
     #polly = PollyTTS()
 
     #pol_client = polly.connectToPolly()
     #polly.speak(polly=pol_client, text="Testing tesing 1 2 3")
+    if is_title:
+        filename = f"audio/{submission.id}_title_voice.mp3"
+        text = submission.title
+    else:
+        filename = f"audio/{submission.id}_voice.mp3"
+        text = submission.selftext
 
-    filename = f"audio/{submission.id}_voice.mp3"
-
-    tiktts.run(voice=voice, text=submission.selftext, filename=filename)
+    tiktts.run(voice=voice, text=text, filename=filename)
 
     return MP3(filename).info.length
 
@@ -84,20 +93,35 @@ def start_tts_text(text: str, voice: str) -> int:
 
 if __name__ == "__main__":
     print_substep("Please pick an initial option: Manual submission input by URL (1), Automatic submission selection (2)", style="blue")
-    selection = input()
 
-    if selection == "1":
-        print_substep("Please input a valid reddit post URL:", style="blue")
-        submission = reddit.submission(url=input())
-    elif selection == "2":
-        print_substep("Input a subreddit to pick 5 posts from as text form (leave out the r/):", style="blue")
-        get_subissions(input())
-        print_substep("Picking submissions...", style="bold green")
-        submissions = randomize_submissions(5)
-        submission = manual_check(submissions)
-    elif selection != "1" or selection != "2":
-        print_substep("Not a valid response, quitting...", style="red")
-        quit()
+    valid = False
+
+    while not valid:
+        selection = input()
+        if selection == "1":
+            try:
+                print_substep("Please input a valid Redit post URL:", style="blue")
+                submission = reddit.submission(url=input())
+                break
+            except:
+                print_substep("Invalid Reddit submission URL.", style="red")
+        elif selection == "2":
+            try:
+                try:
+                    print_substep("Input a Subreddit to pick 5 posts from as text form (leave out the r/):", style="blue")
+                    get_subissions(input())
+                except:
+                    print_substep("Invalid Subreddit.", style="red")
+                print_substep("Picking submissions...", style="bold green")
+                submissions = randomize_submissions(5)
+                submission = manual_check(submissions)
+                break
+            except:
+                print_substep("Couldnt pick a submission, try again.", style="red")
+        elif selection == "quit" or selection == "exit":
+            sys.exit()
+        elif selection != "1" or selection != "2":
+            print_substep("Not a valid response.", style="red")
 
     print_step(f'"{submission.title}" by: {submission.author.name}')
 
@@ -130,6 +154,8 @@ if __name__ == "__main__":
                 playsound("audio/samples/en_male_cody_voice.mp3")
             if sample.lower() == "ghost face":
                 playsound("audio/samples/en_us_ghostface_voice.mp3")
+            if sample.lower() == "quit" or sample.lower() == "exit":
+                sys.exit()
         if voice.lower() == "male 1":
             voice = "en_us_006"
             break
@@ -157,16 +183,25 @@ if __name__ == "__main__":
         if voice.lower() == "ghost face":
             voice = "en_us_ghostface"
             break
+        if voice.lower() == "quit" or voice.lower() == "exit":
+            sys.exit()
         else:
             print_substep("Invalid voice selection", style="red")
 
 
-    length = start_tts(submission, voice)
+    print_substep("Compiling submission title to TTS", style="bold blue")
+    title_length = start_tts(submission, voice, True)
+    print_substep("Compiling submission text to TTS", style="bold blue")
+    story_length = start_tts(submission, voice, False)
+
+    length = title_length + story_length
+
     movie.set_submission(submission=submission)
     movie.make_background(clip_length=length)
     movie.make_final(submission, length, 1080, 1920)
     print_substep("Removing unneeded files...", style="blue")
     try:
+        sleep(2)
         delete_files()
         print_substep("Unneeded files successfully removed!", style="bold green")
     except:

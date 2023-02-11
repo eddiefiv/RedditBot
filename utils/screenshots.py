@@ -63,9 +63,7 @@ def get_screenshots(submission, screenshot_num: int = 0):
             if page.locator('[data-click-id="text"] button').is_visible():
                 page.locator('[data-click-id="text"] button').click() # Remove "Click to see nsfw" Button in screenshot
 
-        postcontentpath = f"screenshots/{submission.id}/png/title.png"
-        page.locator('[data-test-id="post-content"]').screenshot(path=postcontentpath)
-
+        page.get_by_text(submission.title).screenshot(path=f"screenshots/{submission.id}/png/title.png")
         page.locator('[data-click-id="text"]').first.screenshot(path=f"screenshots/{submission.id}/png/story_content.png")
 
         browser.close()

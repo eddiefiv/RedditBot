@@ -8,6 +8,8 @@ from pytube import YouTube
 from pytube.cli import on_progress
 from moviepy.editor import VideoFileClip, AudioFileClip, ImageClip, TextClip, CompositeVideoClip
 from moviepy.video.compositing.concatenate import concatenate_videoclips
+from moviepy.audio.AudioClip import concatenate_audioclips, CompositeAudioClip
+from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 
 from utils.console import print_step, print_substep
 from utils.screenshots import get_screenshots
@@ -37,9 +39,19 @@ class Movie:
     def generate_footage(self, start_time: int, end_time: int, filename: str):
         print_substep("Generating background clip...", style="bold blue")
 
-        with VideoFileClip(fr"{os.getcwd()}/downloaded/{filename}") as f:
-            new = f.subclip(start_time, end_time)
-            new.write_videofile("background.mp4")
+        try:
+            ffmpeg_extract_subclip(
+                f"{os.getcwd()}/downloaded/{filename}",
+                start_time,
+                end_time,
+                targetname="background.mp4"
+            )
+        except (OSError, IOError):
+            print_substep("FFMPEG error, trying again...", style="red")
+            with VideoFileClip(fr"{os.getcwd()}/downloaded/{filename}") as f:
+                new = f.subclip(start_time, end_time)
+                new.write_videofile("background.mp4")
+        finally:
             if os.path.exists(f"cut_clips/{self.submission.id}"):
                 pass
             else:
@@ -94,7 +106,11 @@ class Movie:
 
         background_clip = self.prepare_background(width=width, height=height)
 
-        audio_clip = AudioFileClip(f"audio/{submission.id}_voice.mp3")
+        audio_clips = [AudioFileClip(f"audio/{submission.id}_title_voice.mp3")]
+        audio_clips.insert(1, AudioFileClip(f"audio/{submission.id}_voice.mp3"))
+
+        audio_concat = concatenate_audioclips(audio_clips)
+        audio_composite = CompositeAudioClip([audio_concat])
 
         print_substep(f"Video will be: {length} seconds long", style="bold green")
 
@@ -107,15 +123,26 @@ class Movie:
         screenshot_width = int((width * 90 ) // 100)
         image_clips.insert(
             0,
-            ImageClip(f"screenshots/{submission.id}/png/story_content.png")
-            .set_duration(audio_clip.duration)
+            ImageClip(f"screenshots/{submission.id}/png/title.png")
+            .set_duration(audio_clips[0].duration)
             .resize(width=screenshot_width)
             .set_opacity(new_opacity)
-            .set_position(("center", "center"))
-            .set_audio(audio_clip)
+            .crossfadein(1)
+            .crossfadeout(1)
+            .set_audio(audio_clips[0])
+        )
+        image_clips.insert(
+            1,
+            ImageClip(f"screenshots/{submission.id}/png/story_content.png")
+            .set_duration(audio_clips[1].duration)
+            .resize(width=screenshot_width)
+            .set_opacity(new_opacity)
+            .set_audio(audio_clips[1])
         )
 
-        final = CompositeVideoClip([background_clip, image_clips[0]])
+        image_concat = concatenate_videoclips(image_clips).set_position(("center", "center"))
+
+        final = CompositeVideoClip([background_clip, image_concat], use_bgclip=True)
 
         filename = f"FINAL-{submission.id}"
 

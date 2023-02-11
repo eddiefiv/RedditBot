@@ -27,7 +27,7 @@ def get_screenshots(submission, screenshot_num: int = 0):
     with sync_playwright() as p:
         print_substep("Launching Headless Browser...")
 
-        browser = p.chromium.launch(headless=False)
+        browser = p.chromium.launch(headless=True)
         context = browser.new_context()
 
         # Device scale factor (or dsf for short) allows us to increase the resolution of the screenshots
@@ -43,8 +43,6 @@ def get_screenshots(submission, screenshot_num: int = 0):
         )
 
         cookie_file = open("utils/data/cookie-dark-mode.json", encoding="utf-8")
-        bgcolor = (33, 33, 36, 255)
-        txtcolor = (240, 240, 240)
 
         cookies = json.load(cookie_file)
         cookie_file.close()

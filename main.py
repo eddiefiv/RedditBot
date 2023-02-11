@@ -59,19 +59,28 @@ def delete_files():
     shutil.rmtree("cut_clips")
     shutil.rmtree("screenshots")
 
-def start_tts(submission) -> int:
+def start_tts(submission, voice) -> int:
     tiktts = TikTokTTS()
     #polly = PollyTTS()
 
     #pol_client = polly.connectToPolly()
     #polly.speak(polly=pol_client, text="Testing tesing 1 2 3")
 
-    voice = "en_us_006"
     filename = f"audio/{submission.id}_voice.mp3"
 
     tiktts.run(voice=voice, text=submission.selftext, filename=filename)
 
     return MP3(filename).info.length
+
+def start_tts_text(text: str, voice: str) -> int:
+    tiktts = TikTokTTS()
+    #polly = PollyTTS()
+
+    #pol_client = polly.connectToPolly()
+    #polly.speak(polly=pol_client, text="Testing tesing 1 2 3")
+    filename = f"audio/{voice}_voice.mp3"
+
+    tiktts.run(voice=voice, text=text, filename=filename)
 
 if __name__ == "__main__":
     print_substep("Please pick an initial option: Manual submission input by URL (1), Automatic submission selection (2)", style="blue")
@@ -81,21 +90,86 @@ if __name__ == "__main__":
         print_substep("Please input a valid reddit post URL:", style="blue")
         submission = reddit.submission(url=input())
     elif selection == "2":
-        print_substep("Input a subreddit to pick 5 posts from as text form (leave out the r/):")
+        print_substep("Input a subreddit to pick 5 posts from as text form (leave out the r/):", style="blue")
         get_subissions(input())
         print_substep("Picking submissions...", style="bold green")
         submissions = randomize_submissions(5)
         submission = manual_check(submissions)
     elif selection != "1" or selection != "2":
-        print("Not a valid response, quitting...")
+        print_substep("Not a valid response, quitting...", style="red")
         quit()
 
     print_step(f'"{submission.title}" by: {submission.author.name}')
-    length = start_tts(submission)
+
+    voice_valid = False
+    while not voice_valid:
+        print_substep("--------------------------------", style="blue")
+        print_substep("Please pick a voice to use or use (Preview) to sample a voice: (Male 1, Male 2, Female 1, Female 2, Narrator, Funny, Peaceful, Serious, Ghost Face)", style="blue")
+        voice = input()
+        print_substep("--------------------------------", style="blue")
+
+        if voice.lower() == "preview":
+            print_substep("Please select a voice to sample", style="blue")
+            sample = input()
+
+            if sample.lower() == "male 1":
+                playsound("audio/samples/en_us_male1.mp3")
+            if sample.lower() == "male 2":
+                playsound("audio/samples/en_us_male2.mp3")
+            if sample.lower() == "female 1":
+                playsound("audio/samples/en_us_female1.mp3")
+            if sample.lower() == "female 2":
+                playsound("audio/samples/en_us_female2.mp3")
+            if sample.lower() == "narrator":
+                playsound("audio/samples/en_male_narration.mp3")
+            if sample.lower() == "funny":
+                playsound("audio/samples/en_male_funny.mp3")
+            if sample.lower() == "peaceful":
+                playsound("audio/samples/en_female_emotional_voice.mp3")
+            if sample.lower() == "serious":
+                playsound("audio/samples/en_male_cody_voice.mp3")
+            if sample.lower() == "ghost face":
+                playsound("audio/samples/en_us_ghostface_voice.mp3")
+        if voice.lower() == "male 1":
+            voice = "en_us_006"
+            break
+        if voice.lower() == "male 2":
+            voice = "en_us_007"
+            break
+        if voice.lower() == "female 1":
+            voice = "en_us_001"
+            break
+        if voice.lower() == "female 1":
+            voice = "en_us_002"
+            break
+        if voice.lower() == "narrator":
+            voice = "en_male_narration"
+            break
+        if voice.lower() == "funny":
+            voice = "en_male_funny"
+            break
+        if voice.lower() == "peaceful":
+            voice = "en_female_emotional"
+            break
+        if voice.lower() == "serious":
+            voice = "en_male_cody"
+            break
+        if voice.lower() == "ghost face":
+            voice = "en_us_ghostface"
+            break
+        else:
+            print_substep("Invalid voice selection", style="red")
+
+
+    length = start_tts(submission, voice)
     movie.set_submission(submission=submission)
     movie.make_background(clip_length=length)
     movie.make_final(submission, length, 1080, 1920)
     print_substep("Removing unneeded files...", style="blue")
-    delete_files()
-    print_substep("Unneeded files successfully removed!", style="bold green")
-    print_step(f"Final render is complete! Video can be found at: {os.getcwd()}/results/FINAL-{submission.id}")
+    try:
+        delete_files()
+        print_substep("Unneeded files successfully removed!", style="bold green")
+    except:
+        print_substep("Could not successfully delete all unnecessary files. Manual deletion may be required.", style="red")
+    finally:
+        print_step(f"Final render is complete! Video can be found at: {os.getcwd()}/results/FINAL-{submission.id}")

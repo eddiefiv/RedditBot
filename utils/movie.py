@@ -43,7 +43,7 @@ class Movie:
             if os.path.exists(f"cut_clips/{self.submission.id}"):
                 pass
             else:
-                os.mkdir(f"cut_clips/{self.submission.id}")
+                os.makedirs(f"cut_clips/{self.submission.id}")
 
             shutil.move("background.mp4", f"cut_clips/{self.submission.id}/background.mp4")
 
@@ -69,7 +69,9 @@ class Movie:
         minecraft_uri = "https://www.youtube.com/watch?v=n_Dv4JMiwK8&t"
 
         if os.path.exists(fr"downloaded\{filename}"):
+            print_substep("--------------------------------", style="blue")
             print_substep("Background video already exists!", style="bold green")
+            print_substep("--------------------------------", style="blue")
             pass
         else:
             print_step("Background video not downloaded, now downloading. This only needs to happen once and will take a moment...")
@@ -92,7 +94,7 @@ class Movie:
 
         background_clip = self.prepare_background(width=width, height=height)
 
-        audio_clip = AudioFileClip("en_us_006_voice.mp3")
+        audio_clip = AudioFileClip(f"audio/{submission.id}_voice.mp3")
 
         print_substep(f"Video will be: {length} seconds long", style="bold green")
 

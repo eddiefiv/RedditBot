@@ -3,4 +3,5 @@ cut_clips/
 downloaded/
 build/
 dist/
+audio/gen/
 *.mp4

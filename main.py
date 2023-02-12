@@ -71,32 +71,20 @@ def start_tts(submission, voice, is_title: bool) -> int:
     #pol_client = polly.connectToPolly()
     #polly.speak(polly=pol_client, text="Testing tesing 1 2 3")
     if is_title:
-        filename = f"audio/{submission.id}_title_voice.mp3"
+        filename = f"audio/gen/{submission.id}_title_voice.mp3"
         text = submission.title
     else:
-        filename = f"audio/{submission.id}_voice.mp3"
+        filename = f"audio/gen/{submission.id}_voice.mp3"
         text = submission.selftext
 
     tiktts.run(voice=voice, text=text, filename=filename)
 
     return MP3(filename).info.length
 
-def start_tts_text(text: str, voice: str) -> int:
-    tiktts = TikTokTTS()
-    #polly = PollyTTS()
-
-    #pol_client = polly.connectToPolly()
-    #polly.speak(polly=pol_client, text="Testing tesing 1 2 3")
-    filename = f"audio/{voice}_voice.mp3"
-
-    tiktts.run(voice=voice, text=text, filename=filename)
-
 if __name__ == "__main__":
     print_substep("Please pick an initial option: Manual submission input by URL (1), Automatic submission selection (2)", style="blue")
 
-    valid = False
-
-    while not valid:
+    while True:
         selection = input()
         if selection == "1":
             try:

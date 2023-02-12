@@ -1,4 +1,6 @@
 screenshots/
 cut_clips/
 downloaded/
+build/
+dist/
 *.mp4

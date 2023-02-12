@@ -34,7 +34,11 @@ class Movie:
         return rand_time, rand_time + clip_length
 
     def download_video(self, video_uri: str, filename: str):
-        YouTube(video_uri, on_progress_callback=on_progress, on_complete_callback=print_substep("Video download complete!", style="bold green")).streams.filter(res="1080p").first().download(f"downloaded", filename=filename)
+        try:
+            YouTube(video_uri, on_progress_callback=on_progress).streams.filter(res="1080p").first().download(f"downloaded", filename=filename)
+            print_substep("Video download complete!", style="bold green")
+        except:
+            print_substep("Background video download failed. Quitting...", style="red")
 
     def generate_footage(self, start_time: int, end_time: int, filename: str):
         print_substep("Generating background clip...", style="bold blue")
@@ -75,10 +79,20 @@ class Movie:
 
         return clip.crop(x1=x1, y1=0, x2=x2, y2=height)
 
-    def make_background(self, clip_length: int):
+    def make_background(self, clip_length: int, clip: str):
         # If video is not downloaded, download it
-        filename = "minecraft_full_background_1080p.mp4"
-        minecraft_uri = "https://www.youtube.com/watch?v=n_Dv4JMiwK8&t"
+        if clip == "Minecraft":
+            filename = "minecraft_full_background_1080p.mp4"
+            uri = "https://www.youtube.com/watch?v=n_Dv4JMiwK8&t"
+        elif clip == "Rocket League":
+            filename = "rocket_full_background_1080p.mp4"
+            uri = "https://www.youtube.com/watch?v=riilLCDgf-s"
+        elif clip == "Subway Surfers":
+            filename = "subsurf_full_background_1080p.mp4"
+            uri = "https://www.youtube.com/watch?v=dvjy6V4vLlI"
+        elif clip == "GTA":
+            filename = "gta_full_background_1080p.mp4"
+            uri = "https://www.youtube.com/watch?v=vVJuMq1CMNo&t"
 
         if os.path.exists(fr"downloaded\{filename}"):
             print_substep("--------------------------------", style="blue")
@@ -86,10 +100,10 @@ class Movie:
             print_substep("--------------------------------", style="blue")
             pass
         else:
-            print_step("Background video not downloaded, now downloading. This only needs to happen once and will take a moment...")
-            self.download_video(minecraft_uri, filename)
+            print_substep(f"Background video for {clip} is not downloaded yet, now downloading. This will only happen once and may take a moment...", style="bold green")
+            self.download_video(uri, filename)
 
-        start_time, end_time = self.get_random_time(clip_length, YouTube(minecraft_uri).length)
+        start_time, end_time = self.get_random_time(clip_length, YouTube(uri).length)
 
         self.generate_footage(start_time, end_time, filename)
 

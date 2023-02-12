@@ -197,7 +197,25 @@ if __name__ == "__main__":
     length = title_length + story_length
 
     movie.set_submission(submission=submission)
-    movie.make_background(clip_length=length)
+    while True:
+        print_substep("Choose a background clip to use (Minecraft, Rocket League, Subway Surfers, GTA)", style="blue")
+        choice = input()
+
+        if choice.lower() == "minecraft":
+            movie.make_background(clip_length=length, clip="Minecraft")
+            break
+        elif choice.lower() == "rocket league":
+            movie.make_background(clip_length=length, clip="Rocket League")
+            break
+        elif choice.lower() == "subway surfers":
+            movie.make_background(clip_length=length, clip="Subway Surfers")
+            break
+        elif choice.lower() == "gta":
+            movie.make_background(clip_length=length, clip="GTA")
+            break
+        else:
+            print_substep("Please pick a valid background video choice.", style="red")
+
     movie.make_final(submission, length, 1080, 1920)
     print_substep("Removing unneeded files...", style="blue")
     try:

@@ -1,10 +1,8 @@
 import sys
 import math
 import os
-import sys
 import praw
 import random
-import vlc
 import shutil
 
 from time import sleep

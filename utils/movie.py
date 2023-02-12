@@ -100,7 +100,9 @@ class Movie:
             print_substep("--------------------------------", style="blue")
             pass
         else:
-            print_substep(f"Background video for {clip} is not downloaded yet, now downloading. This will only happen once and may take a moment...", style="bold green")
+            print_substep("--------------------------------", style="blue")
+            print_substep(f"Background video for {clip} is not downloaded yet, now downloading. This will only happen once and may take a moment...", style="bold blue")
+            print_substep("--------------------------------", style="blue")
             self.download_video(uri, filename)
 
         start_time, end_time = self.get_random_time(clip_length, YouTube(uri).length)
@@ -120,8 +122,8 @@ class Movie:
 
         background_clip = self.prepare_background(width=width, height=height)
 
-        audio_clips = [AudioFileClip(f"audio/{submission.id}_title_voice.mp3")]
-        audio_clips.insert(1, AudioFileClip(f"audio/{submission.id}_voice.mp3"))
+        audio_clips = [AudioFileClip(f"audio/gen/{submission.id}_title_voice.mp3")]
+        audio_clips.insert(1, AudioFileClip(f"audio/gen/{submission.id}_voice.mp3"))
 
         audio_concat = concatenate_audioclips(audio_clips)
         audio_composite = CompositeAudioClip([audio_concat])
@@ -158,10 +160,10 @@ class Movie:
 
         final = CompositeVideoClip([background_clip, image_concat], use_bgclip=True)
 
-        filename = f"FINAL-{submission.id}"
+        filename = f"FINAL-{submission.title}"
 
         if not os.path.exists(f"results/{submission.subreddit}"):
-            print_substep(f"Results folder for subreddit: {submission.subreddit} does not exists. Creating it now...", style="blue")
+            print_substep(f"Results folder for subreddit: {submission.subreddit} does not exist. Creating it now...", style="blue")
             os.makedirs(f"results/{submission.subreddit}")
             print_substep("Folder created!", style="bold green")
 

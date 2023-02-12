@@ -128,6 +128,7 @@ class TikTokTTS:
 
         with open(filename, "wb") as out:
             out.write(b64d)
+            out.close()
 
         output_data = {
             "status": msg.capitalize(),
@@ -170,6 +171,7 @@ class TikTokTTS:
 
         with open(filename, "wb") as out:
             out.write(b64d)
+            out.close()
 
         output_data = {
             "status": msg.capitalize(),
@@ -217,3 +219,4 @@ class PollyTTS:
         with open('voice.mp3' 'w') as file:
             soundbytes = response['AudioStream'].read()
             file.write(soundbytes)
+            file.close()

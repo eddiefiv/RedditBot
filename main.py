@@ -10,7 +10,7 @@ import shutil
 from time import sleep
 from playsound import playsound
 from mutagen.mp3 import MP3
-from utils.tts import TikTokTTS, PollyTTS
+from utils.tts import TikTokTTS
 from utils.movie import Movie
 from utils.console import *
 
@@ -60,7 +60,7 @@ def delete_files():
     shutil.rmtree("cut_clips")
     shutil.rmtree("screenshots")
 
-    for file in os.listdir("audio"):
+    for file in os.listdir(f"{os.getcwd()}/audio/gen"):
         if file.endswith(".mp3"):
             os.remove(file)
 
@@ -70,6 +70,12 @@ def start_tts(submission, voice, is_title: bool) -> int:
 
     #pol_client = polly.connectToPolly()
     #polly.speak(polly=pol_client, text="Testing tesing 1 2 3")
+
+    if os.path.exists("audio/gen"):
+        pass
+    else:
+        os.makedirs("audio/gen")
+
     if is_title:
         filename = f"audio/gen/{submission.id}_title_voice.mp3"
         text = submission.title
@@ -113,8 +119,7 @@ if __name__ == "__main__":
 
     print_step(f'"{submission.title}" by: {submission.author.name}')
 
-    voice_valid = False
-    while not voice_valid:
+    while True:
         print_substep("--------------------------------", style="blue")
         print_substep("Please pick a voice to use or use (Preview) to sample a voice: (Male 1, Male 2, Female 1, Female 2, Narrator, Funny, Peaceful, Serious, Ghost Face)", style="blue")
         voice = input()
@@ -185,6 +190,7 @@ if __name__ == "__main__":
     length = title_length + story_length
 
     movie.set_submission(submission=submission)
+
     while True:
         print_substep("Choose a background clip to use (Minecraft, Rocket League, Subway Surfers, GTA)", style="blue")
         choice = input()
@@ -210,7 +216,8 @@ if __name__ == "__main__":
         sleep(2)
         delete_files()
         print_substep("Unneeded files successfully removed!", style="bold green")
-    except:
+    except OSError as e:
         print_substep("Could not successfully delete all unnecessary files. Manual deletion may be required.", style="red")
+        print_substep(f"Failed with: {e.strerror}", style="red")
     finally:
         print_step(f"Final render is complete! Video can be found at: {os.getcwd()}/results/FINAL-{submission.id}")

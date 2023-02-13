@@ -5,4 +5,5 @@ build/
 dist/
 venv/
 audio/gen/
+__pycache__/
 *.mp4

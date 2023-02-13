@@ -102,12 +102,12 @@ if __name__ == "__main__":
                 try:
                     print_substep("Input a Subreddit to pick 5 posts from as text form (leave out the r/):", style="blue")
                     get_subissions(input())
+                    print_substep("Picking submissions...", style="bold green")
+                    submissions = randomize_submissions(5)
+                    submission = manual_check(submissions)
                 except:
                     print_substep("Invalid Subreddit.", style="red")
-                print_substep("Picking submissions...", style="bold green")
-                submissions = randomize_submissions(5)
-                submission = manual_check(submissions)
-                break
+                    sys.exit()
             except:
                 print_substep("Couldnt pick a submission, try again.", style="red")
         elif selection == "quit" or selection == "exit":

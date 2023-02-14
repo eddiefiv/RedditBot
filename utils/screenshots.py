@@ -25,7 +25,7 @@ def get_screenshots(submission, screenshot_num: int = 0):
         os.makedirs(f"screenshots/{submission.id}")
 
     with sync_playwright() as p:
-        print_substep("Launching Headless Browser...")
+        print_substep("Launching Headless Browser...", style="bold blue")
 
         browser = p.chromium.launch(headless=True)
         context = browser.new_context()

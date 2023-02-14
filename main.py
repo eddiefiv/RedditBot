@@ -23,6 +23,7 @@ reddit = praw.Reddit(
 movie = Movie(os.getcwd())
 
 def get_subissions(subreddit):
+    print_substep("Picking submissions...", style="bold green")
     for submission in reddit.subreddit(subreddit).hot(limit=50):
         posts.append(submission)
 
@@ -101,14 +102,13 @@ if __name__ == "__main__":
         elif selection == "2":
             try:
                 try:
-                    print_substep("Input a Subreddit to pick 5 posts from as text form (leave out the r/):", style="blue")
+                    print_substep("Input a Subreddit to pick 10 posts from as text form (leave out the r/):", style="blue")
                     get_subissions(input())
                 except:
                     print_substep("Invalid Subreddit.", style="red")
                     sys.exit()
                 finally:
-                    print_substep("Picking submissions...", style="bold green")
-                    submissions = randomize_submissions(5)
+                    submissions = randomize_submissions(10)
                     submission = manual_check(submissions)
                     break
             except:
@@ -218,7 +218,7 @@ if __name__ == "__main__":
         delete_files()
         print_substep("Unneeded files successfully removed!", style="bold green")
     except OSError as e:
-        print_substep("Could not successfully delete all unnecessary files. Manual deletion may be required.", style="red")
+        print_substep("Non-Fatal Warning: Could not successfully delete all unnecessary files. Manual deletion may be required.", style="yellow")
         print_substep(f"Failed with: {e.strerror}", style="red")
     finally:
         print_step(f"Final render is complete! Video can be found at: {os.getcwd()}/results/FINAL-{submission.id}")

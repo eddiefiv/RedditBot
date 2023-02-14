@@ -30,7 +30,7 @@ class Movie:
         Returns:
             tuple(int, int): Randomized start and end time
         """
-        rand_time = random.randrange(180, int(youtube_length) - int(clip_length))
+        rand_time = random.randrange(300, int(youtube_length) - int(clip_length))
         return rand_time, rand_time + clip_length
 
     def download_video(self, video_uri: str, filename: str):
@@ -160,7 +160,7 @@ class Movie:
 
         final = CompositeVideoClip([background_clip, image_concat], use_bgclip=True)
 
-        filename = f"FINAL-{submission.title}"
+        filename = f"FINAL-{submission.id}"
 
         if not os.path.exists(f"results/{submission.subreddit}"):
             print_substep(f"Results folder for subreddit: {submission.subreddit} does not exist. Creating it now...", style="blue")

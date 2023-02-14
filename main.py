@@ -47,12 +47,13 @@ def manual_check(submissions: list[praw.Reddit.submission]) -> praw.Reddit.submi
 
         if (acceptable == "y"):
             acceptable = True
-            break
         elif (acceptable == "n"):
             acceptable = False
 
-    if acceptable:
-        return submissions[i]
+        if acceptable:
+            return submissions[i]
+
+    print_substep("Please pick an initial option: Manual submission input by URL (1), Automatic submission selection (2)", style="blue")
 
 def delete_files():
     shutil.rmtree("cut_clips")
@@ -102,12 +103,14 @@ if __name__ == "__main__":
                 try:
                     print_substep("Input a Subreddit to pick 5 posts from as text form (leave out the r/):", style="blue")
                     get_subissions(input())
-                    print_substep("Picking submissions...", style="bold green")
-                    submissions = randomize_submissions(5)
-                    submission = manual_check(submissions)
                 except:
                     print_substep("Invalid Subreddit.", style="red")
                     sys.exit()
+                finally:
+                    print_substep("Picking submissions...", style="bold green")
+                    submissions = randomize_submissions(5)
+                    submission = manual_check(submissions)
+                    break
             except:
                 print_substep("Couldnt pick a submission, try again.", style="red")
         elif selection == "quit" or selection == "exit":

@@ -60,7 +60,7 @@ def delete_files():
     shutil.rmtree("cut_clips")
     shutil.rmtree("screenshots")
 
-    for file in os.listdir(f"{os.getcwd()}/audio/gen"):
+    for file in os.listdir(f"audio/gen"):
         if file.endswith(".mp3"):
             os.remove(file)
 

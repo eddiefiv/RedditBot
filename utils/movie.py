@@ -198,7 +198,8 @@ class Movie:
 
             print(f"Chunk: {chunks[i]}\nStarting word and time: {list_of_word_strings[starting_word_idx]}, {starting_time}\nEnding word and time: {list_of_word_strings[last_word_idx]}, {ending_time}")
 
-            txt = TextClip(txt=chunks[i], size=(1080, 720), fontsize=80, font='Segoe-UI-Bold', method='caption', color='white', interline=-1)
+            txt = TextClip(txt=chunks[i], size=(1080, 720), fontsize=80, font='Segoe-UI-Bold', method='caption', color='white', interline=-1, stroke_color="black", stroke_width=5)
+            txt = txt.set_position(("center", "center"))
             txt = txt.set_start(starting_time)
             txt = txt.set_duration(ending_time - starting_time)
             text_clips.append(txt)
@@ -218,7 +219,7 @@ class Movie:
             ImageClip(f"screenshots/{submission.id}/png/title.png")
             .set_duration(audio_clips[0].duration)
             .resize(width=screenshot_width)
-            .set_opacity(0)
+            .set_opacity(new_opacity)
             .crossfadein(1)
             .crossfadeout(1)
             .set_audio(audio_clips[0])

@@ -16,7 +16,7 @@ __all__ = ["TikTok", "TikTokTTSException"]
 defaultRegion = 'us-east-1'
 defaultUrl = 'https://polly.us-east-1.amazonaws.com'
 
-elclient = el.ElevenLabsUser("66ea4d1ed826e7fc199c9809467a3fdd")
+elclient = el.ElevenLabsUser("5e3a54568375d9c106854ea599b19eb4")
 elvoice = elclient.get_voices_by_name("Josh")[0]
 
 disney_voices: Final[tuple] = (

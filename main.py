@@ -1,14 +1,21 @@
 import sys
 import math
-import os
 import praw
 import random
 import shutil
+import os
+import pydub
+import subprocess
 
 from time import sleep
 from playsound import playsound
+from pydub import AudioSegment
+
 from mutagen.mp3 import MP3
-from utils.tts import TikTokTTS
+
+from os import path
+
+from utils.tts import TikTokTTS, ElevenLabsTTS
 from utils.movie import Movie
 from utils.console import *
 
@@ -61,11 +68,11 @@ def delete_files():
     shutil.rmtree("screenshots")
 
     for file in os.listdir(f"audio/gen"):
-        if file.endswith(".mp3"):
-            os.remove(file)
+        os.remove(file)
 
 def start_tts(submission, voice, is_title: bool) -> int:
     tiktts = TikTokTTS()
+    ellabs = ElevenLabsTTS()
     #polly = PollyTTS()
 
     #pol_client = polly.connectToPolly()
@@ -78,12 +85,20 @@ def start_tts(submission, voice, is_title: bool) -> int:
 
     if is_title:
         filename = f"audio/gen/{submission.id}_title_voice.mp3"
+        wavfilename = f"audio/gen/conv/{submission.id}_title_voice.wav"
         text = submission.title
     else:
         filename = f"audio/gen/{submission.id}_voice.mp3"
+        wavfilename = f"audio/gen/conv/{submission.id}_voice.wav"
         text = submission.selftext
 
-    tiktts.run(voice=voice, text=text, filename=filename)
+    if not voice == "josh":
+        tiktts.run(voice=voice, text=text, filename=filename)
+    else:
+        ellabs.run(text=text, filename=filename)
+
+    sound = AudioSegment.from_mp3(filename)
+    sound.export(wavfilename, format="wav")
 
     return MP3(filename).info.length
 
@@ -122,7 +137,7 @@ if __name__ == "__main__":
 
     while True:
         print_substep("--------------------------------", style="blue")
-        print_substep("Please pick a voice to use or use (Preview) to sample a voice: (Male 1, Male 2, Female 1, Female 2, Narrator, Funny, Peaceful, Serious, Ghost Face)", style="blue")
+        print_substep("Please pick a voice to use or use (Preview) to sample a voice: (Josh, Male 1, Male 2, Female 1, Female 2, Narrator, Funny, Peaceful, Serious, Ghost Face)", style="blue")
         voice = input()
         print_substep("--------------------------------", style="blue")
 
@@ -130,6 +145,8 @@ if __name__ == "__main__":
             print_substep("Please select a voice to sample", style="blue")
             sample = input()
 
+            if sample.lower() == "josh":
+                playsound("audio/samples/josh.mp3")
             if sample.lower() == "male 1":
                 playsound("audio/samples/en_us_male1.mp3")
             if sample.lower() == "male 2":
@@ -150,6 +167,9 @@ if __name__ == "__main__":
                 playsound("audio/samples/en_us_ghostface_voice.mp3")
             if sample.lower() == "quit" or sample.lower() == "exit":
                 sys.exit()
+        if voice.lower() == "josh":
+            voice = "josh"
+            break
         if voice.lower() == "male 1":
             voice = "en_us_006"
             break
@@ -181,7 +201,6 @@ if __name__ == "__main__":
             sys.exit()
         else:
             print_substep("Invalid voice selection", style="red")
-
 
     print_substep("Compiling submission title to TTS", style="bold blue")
     title_length = start_tts(submission, voice, True)

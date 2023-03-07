@@ -3,6 +3,9 @@ import os
 import random
 import praw
 import shutil
+import textwrap
+import json
+import wave
 
 from pytube import YouTube
 from pytube.cli import on_progress
@@ -11,6 +14,9 @@ from moviepy.video.compositing.concatenate import concatenate_videoclips
 from moviepy.audio.AudioClip import concatenate_audioclips, CompositeAudioClip
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 
+from vosk import Model, KaldiRecognizer, SetLogLevel
+
+from utils.word import Word
 from utils.console import print_step, print_substep
 from utils.screenshots import get_screenshots
 from utils.video import Video
@@ -122,6 +128,7 @@ class Movie:
 
         background_clip = self.prepare_background(width=width, height=height)
 
+        # Audio clip gathering and concatenation
         audio_clips = [AudioFileClip(f"audio/gen/{submission.id}_title_voice.mp3")]
         audio_clips.insert(1, AudioFileClip(f"audio/gen/{submission.id}_voice.mp3"))
 
@@ -130,6 +137,75 @@ class Movie:
 
         print_substep(f"Video will be: {length} seconds long", style="bold green")
 
+        # Do text chunking
+        chunks = textwrap.wrap(submission.selftext.lower(), 80)
+        timestamps = [audio_clips[0].duration]
+        text_clips = []
+
+        # Use AI model to locate words in the generated tts file
+        model_path = "utils/vosk-model-en-us-0.21"
+        audio_filename = f"audio/gen/conv/{submission.id}_voice.wav"
+
+        print_substep(f"Compiling speech recognition data", style="bold blue")
+
+        model = Model(model_path)
+        wf = wave.open(audio_filename, "rb")
+        rec = KaldiRecognizer(model, wf.getframerate())
+        rec.SetWords(True)
+
+        # Get the list of JSON dictionaries
+        results = []
+
+        # Recognize speech using vosk model
+        while True:
+            data = wf.readframes(4000)
+            if (len(data) == 0):
+                break
+            if rec.AcceptWaveform(data):
+                part_result = json.loads(rec.Result())
+                results.append(part_result)
+
+        part_result = json.loads(rec.FinalResult())
+        results.append(part_result)
+
+        # Convert list of JSON dictionaries to list of 'Word' objects
+        list_of_words = []
+        list_of_word_strings = []
+
+        for sentence in results:
+            if len(sentence) == 1:
+                continue
+            for obj in sentence['result']:
+                w = Word(obj)
+                list_of_words.append(w)
+
+        wf.close() # Close audiofile
+
+        # Output to the screen
+        for word in list_of_words:
+            print(word.to_string())
+            list_of_word_strings.append(word.get_word())
+
+        # Generate and add TextClips to the screen
+        idx_offset = 0
+        title_offset = audio_clips[0].duration
+        for i in range(len(chunks)):
+            chunk_words = chunks[i].lower().split()
+            starting_word_idx = list_of_word_strings.index(chunk_words[0], idx_offset)
+            last_word_idx = starting_word_idx + len(chunk_words) - 2
+            starting_time = list_of_words[starting_word_idx].get_start() + title_offset
+            ending_time = list_of_words[last_word_idx].get_end() + title_offset
+
+            print(f"Chunk: {chunks[i]}\nStarting word and time: {list_of_word_strings[starting_word_idx]}, {starting_time}\nEnding word and time: {list_of_word_strings[last_word_idx]}, {ending_time}")
+
+            txt = TextClip(txt=chunks[i], size=(1080, 720), fontsize=80, font='Segoe-UI-Bold', method='caption', color='white', interline=-1)
+            txt = txt.set_start(starting_time)
+            txt = txt.set_duration(ending_time - starting_time)
+            text_clips.append(txt)
+
+            idx_offset = last_word_idx
+
+        # Image clip gathering and concatenation
         image_clips = []
 
         new_opacity = 1 if opacity is None or float(opacity) >= 1 else float(opacity)
@@ -142,7 +218,7 @@ class Movie:
             ImageClip(f"screenshots/{submission.id}/png/title.png")
             .set_duration(audio_clips[0].duration)
             .resize(width=screenshot_width)
-            .set_opacity(new_opacity)
+            .set_opacity(0)
             .crossfadein(1)
             .crossfadeout(1)
             .set_audio(audio_clips[0])
@@ -152,13 +228,14 @@ class Movie:
             ImageClip(f"screenshots/{submission.id}/png/story_content.png")
             .set_duration(audio_clips[1].duration)
             .resize(width=screenshot_width)
-            .set_opacity(new_opacity)
+            .set_opacity(0)
             .set_audio(audio_clips[1])
         )
 
         image_concat = concatenate_videoclips(image_clips).set_position(("center", "center"))
 
-        final = CompositeVideoClip([background_clip, image_concat], use_bgclip=True)
+        #final = CompositeVideoClip([background_clip, image_concat], use_bgclip=True)
+        final = CompositeVideoClip([background_clip, image_concat, *text_clips], use_bgclip=True)
 
         filename = f"FINAL-{submission.id}"
 

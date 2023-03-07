@@ -6,4 +6,5 @@ dist/
 venv/
 audio/gen/
 __pycache__/
+vosk-model-en-us-0.21/
 *.mp4

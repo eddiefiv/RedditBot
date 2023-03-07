@@ -4,6 +4,8 @@ import os
 import boto3
 import re
 import textwrap
+import elevenlabslib as el
+import wave
 
 from typing import Optional, Final
 
@@ -13,6 +15,9 @@ __all__ = ["TikTok", "TikTokTTSException"]
 
 defaultRegion = 'us-east-1'
 defaultUrl = 'https://polly.us-east-1.amazonaws.com'
+
+elclient = el.ElevenLabsUser("66ea4d1ed826e7fc199c9809467a3fdd")
+elvoice = elclient.get_voices_by_name("Josh")[0]
 
 disney_voices: Final[tuple] = (
     "en_us_ghostface",  # Ghost Face
@@ -205,6 +210,24 @@ class TikTokTTS:
             os.removedirs('./batch/')
 
             return
+
+class ElevenLabsTTS:
+    def __init__(self):
+        self.voice = elvoice
+        self.client = elclient
+
+    def run(self, text, filename):
+        bytes = self.voice.generate_audio_bytes(text)
+
+        with open(filename, 'wb') as file:
+            file.write(bytes)
+            file.close()
+
+        for historyItem in self.client.get_history_items():
+            if historyItem.text == text:
+                # The first items are the newest, so we can stop as soon as we find one.
+                historyItem.delete()
+                break
 
 class PollyTTS:
     def __init__(self):
